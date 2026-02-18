@@ -1,5 +1,5 @@
 #!/bin/bash
-# Zin Marketing Agent - Simple CLI wrapper
+# Zin Marketing Agent - CLI Entry Point
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -11,9 +11,9 @@ if [ -f .env ]; then
     set +a
 else
     echo "❌ Error: .env file not found"
-    echo "Please create .env with your API keys"
+    echo "Copy config/.env.example to .env and add your API keys"
     exit 1
 fi
 
 # Run master agent with all arguments
-python3 master_agent.py "$@"
+python3 src/master_agent.py "$@"
