@@ -1,0 +1,34 @@
+{
+  "lead_generation_campaign": {
+    "description": "Complete lead generation and email campaign",
+    "steps": [
+      {
+        "name": "Generate Leads",
+        "automation": "lead_generation",
+        "description": "Find potential leads"
+      },
+      {
+        "name": "Send Emails",
+        "automation": "bulk_email",
+        "description": "Send bulk emails to generated leads",
+        "condition": "previous.count > 0"
+      }
+    ]
+  },
+  "reddit_outreach": {
+    "description": "Find leads on Reddit and send them emails",
+    "steps": [
+      {
+        "name": "Reddit Lead Finding",
+        "automation": "reddit_leads",
+        "description": "Search Reddit for potential leads"
+      },
+      {
+        "name": "Email Outreach",
+        "automation": "bulk_email",
+        "description": "Send personalized emails to Reddit leads",
+        "condition": "previous.count > 0"
+      }
+    ]
+  }
+}

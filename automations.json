@@ -1,0 +1,36 @@
+{
+  "bulk_email": {
+    "description": "Send bulk emails to multiple recipients with personalized content",
+    "webhook_path": "/webhook/simple-bulk-email",
+    "expected_response": {
+      "Email Sent ": "string",
+      "required_fields": ["Email Sent "]
+    }
+  },
+  "simple_bulk_email": {
+    "description": "Simple bulk email sending without attachments or complex features",
+    "webhook_path": "/webhook/simple-bulk-email",
+    "expected_response": {
+      "Email Sent ": "string",
+      "required_fields": ["Email Sent "]
+    }
+  },
+  "reddit_leads": {
+    "description": "Find and extract potential leads from Reddit posts and comments based on keywords",
+    "webhook_path": "/webhook/reddit-leads",
+    "expected_response": {
+      "leads": "array",
+      "count": "number",
+      "required_fields": ["leads"]
+    }
+  },
+  "lead_generation": {
+    "description": "Generate potential customer leads from various sources",
+    "webhook_path": "/webhook/lead-generation",
+    "expected_response": {
+      "leads": "array",
+      "count": "number",
+      "required_fields": ["leads"]
+    }
+  }
+}
