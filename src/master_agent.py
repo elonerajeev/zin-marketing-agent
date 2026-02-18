@@ -28,7 +28,7 @@ class MasterAgent:
     def load_automations(self):
         """Load automation registry from JSON file"""
         try:
-            with open("automations.json", "r") as f:
+            with open("config/automations.json", "r") as f:
                 return json.load(f)
         except FileNotFoundError:
             return {}
