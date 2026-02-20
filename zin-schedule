@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""
+Schedule management CLI
+"""
+import sys
+sys.path.insert(0, 'src')
+
+from scheduler import Scheduler
+from styling import *
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage:")
+        print('  ./zin schedule "command" "schedule"')
+        print('  ./zin schedule list')
+        print('  ./zin schedule remove "command"')
+        print("")
+        print("Examples:")
+        print('  ./zin schedule "generate leads" "daily at 9am"')
+        print('  ./zin schedule "send bulk email" "every day at 2pm"')
+        print('  ./zin schedule list')
+        sys.exit(1)
+    
+    scheduler = Scheduler()
+    command = sys.argv[1]
+    
+    if command == "list":
+        schedules = scheduler.list_schedules()
+        if not schedules:
+            print(warning("No scheduled automations"))
+            return
+        
+        print(header("📅 SCHEDULED AUTOMATIONS"))
+        data = []
+        for sched in schedules:
+            data.append([
+                sched['cron'],
+                sched['command'][:40],
+                sched['description']
+            ])
+        print(table(["Cron", "Command", "Schedule"], data))
+    
+    elif command == "remove":
+        if len(sys.argv) < 3:
+            print(error("Specify command to remove"))
+            sys.exit(1)
+        
+        cmd_to_remove = sys.argv[2]
+        success, msg = scheduler.remove_schedule(cmd_to_remove)
+        if success:
+            print(success(msg))
+        else:
+            print(error(msg))
+    
+    else:
+        # Add schedule
+        if len(sys.argv) < 3:
+            print(error("Specify schedule (e.g., 'daily at 9am')"))
+            sys.exit(1)
+        
+        schedule_text = sys.argv[2]
+        success, msg = scheduler.add_schedule(command, schedule_text)
+        
+        if success:
+            print(f"{Colors.BRIGHT_GREEN}✓ {msg}{Colors.RESET}")
+            print(f"{Colors.BRIGHT_BLUE}ℹ{Colors.RESET} Logs will be saved to: logs/cron.log")
+        else:
+            print(f"{Colors.BRIGHT_YELLOW}⚠{Colors.RESET} {msg}")
+
+if __name__ == "__main__":
+    # Create logs directory
+    import os
+    os.makedirs("logs", exist_ok=True)
+    main()

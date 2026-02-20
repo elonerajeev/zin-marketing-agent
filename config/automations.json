@@ -1,36 +1,56 @@
 {
-  "bulk_email": {
-    "description": "Send bulk emails to multiple recipients with personalized content",
-    "webhook_path": "/webhook/simple-bulk-email",
-    "expected_response": {
-      "Email Sent ": "string",
-      "required_fields": ["Email Sent "]
-    }
-  },
-  "simple_bulk_email": {
-    "description": "Simple bulk email sending without attachments or complex features",
-    "webhook_path": "/webhook/simple-bulk-email",
-    "expected_response": {
-      "Email Sent ": "string",
-      "required_fields": ["Email Sent "]
-    }
-  },
-  "reddit_leads": {
-    "description": "Find and extract potential leads from Reddit posts and comments based on keywords",
-    "webhook_path": "/webhook/reddit-leads",
-    "expected_response": {
-      "leads": "array",
-      "count": "number",
-      "required_fields": ["leads"]
-    }
-  },
   "lead_generation": {
-    "description": "Generate potential customer leads from various sources",
+    "description": "Generate potential customer leads using Apollo.io and Apify sources with enrichment and validation",
+    "platform": "n8n",
+    "category": "Lead Generation",
     "webhook_path": "/webhook/lead-generation",
     "expected_response": {
-      "leads": "array",
-      "count": "number",
-      "required_fields": ["leads"]
+      "status": "string",
+      "message": "string",
+      "stats": "object",
+      "required_fields": ["status", "stats"]
+    }
+  },
+  "bulk_email": {
+    "description": "Send bulk emails to multiple recipients with personalized content",
+    "platform": "n8n",
+    "category": "Email Marketing",
+    "webhook_path": "/webhook/simple-bulk-email",
+    "expected_response": {
+      "Email Sent ": "string",
+      "required_fields": ["Email Sent "]
+    }
+  },
+  "schedule_meeting": {
+    "description": "Schedule a meeting with automatic time slot detection and calendar invite generation",
+    "platform": "code",
+    "category": "Scheduling",
+    "script_name": "schedule_meeting",
+    "expected_response": {
+      "status": "string",
+      "meeting": "object"
+    }
+  },
+  "enrich_leads": {
+    "description": "Enrich lead data with company information, social profiles, and lead scoring",
+    "platform": "code",
+    "category": "Lead Enrichment",
+    "script_name": "enrich_leads",
+    "expected_response": {
+      "status": "string",
+      "enriched_count": "number",
+      "leads": "array"
+    }
+  },
+  "generate_emails": {
+    "description": "Generate personalized cold emails using AI for different industries and roles",
+    "platform": "code",
+    "category": "AI Content",
+    "script_name": "generate_emails",
+    "expected_response": {
+      "status": "string",
+      "emails_generated": "number",
+      "emails": "array"
     }
   }
 }

@@ -6,6 +6,8 @@ import re
 from datetime import datetime
 from styling import *
 from analytics import Analytics
+from database import ResultsDB
+from code_executor import CodeExecutor
 
 class MasterAgent:
     def __init__(self):
@@ -24,6 +26,8 @@ class MasterAgent:
         self.automations = self.load_automations()
         self.history = []
         self.analytics = Analytics()
+        self.db = ResultsDB()
+        self.code_executor = CodeExecutor()
     
     def load_automations(self):
         """Load automation registry from JSON file"""
@@ -89,11 +93,17 @@ class MasterAgent:
 "{user_input}"
 
 Extract:
-- emails: list of email addresses
+- emails: list of email addresses (extract ALL mentioned emails)
+- recipients: number of recipients if mentioned (e.g., "3 recipients" = 3)
 - subject: email subject if mentioned
 - message: message content if mentioned
+- draft_mode: true if user says "draft" or "don't send", false otherwise
 - names: list of names if mentioned
-- count: number if mentioned
+- count: number if mentioned (default: 50)
+- role: job title/role if mentioned (e.g., "engineer", "developer")
+- location: city/location if mentioned (e.g., "San Francisco", "NYC")
+- industry: industry/sector if mentioned (e.g., "technology", "healthcare")
+- company_size: company size if mentioned (e.g., "startup", "enterprise")
 
 Return ONLY valid JSON, no explanation."""
 
@@ -151,10 +161,28 @@ If no good match, reply with "NONE"."""
         return None
     
     def execute_automation(self, automation_name, user_input, params=None):
-        """Trigger n8n webhook with enhanced payload"""
+        """Trigger automation webhook (supports multiple platforms)"""
         automation = self.automations[automation_name]
-        webhook_path = automation["webhook_path"]
-        webhook_url = f"{self.n8n_base_url}{webhook_path}"
+        platform = automation.get("platform", "n8n")
+        
+        # Build webhook URL based on platform
+        if platform == "n8n":
+            webhook_path = automation["webhook_path"]
+            webhook_url = f"{self.n8n_base_url}{webhook_path}"
+        elif platform == "code":
+            # Execute Python script directly
+            script_name = automation.get("script_name")
+            if not script_name:
+                return {"status": "error", "message": "No script_name configured"}
+            
+            return self.code_executor.execute_script(script_name, user_input, params or {})
+        elif platform in ["make", "zapier", "opal", "sim"]:
+            # External platforms use full webhook URL
+            webhook_url = automation.get("webhook_url")
+            if not webhook_url:
+                return {"status": "error", "message": f"No webhook_url configured for {platform}"}
+        else:
+            return {"status": "error", "message": f"Unsupported platform: {platform}"}
         
         payload = {
             "user_input": user_input,
@@ -467,17 +495,49 @@ Format: "• automation_name - reason why it's relevant"
         
         # Handle system queries
         lower_input = user_input.lower()
-        if any(word in lower_input for word in ["how many", "list", "show", "what automations", "available"]):
+        if any(word in lower_input for word in ["how many", "list", "show", "what", "all", "available", "have"]):
             if any(word in lower_input for word in ["automation", "workflow"]):
                 count = len(self.automations)
                 print(f"\n{info(f'Total automations: {bold(str(count))}')}\n")
-                print(table(["Automation", "Description"], 
-                           [[name, data["description"]] for name, data in self.automations.items()]))
+                
+                # Build table data with platform and category
+                table_data = []
+                for name, data in self.automations.items():
+                    platform = data.get('platform', 'n8n')
+                    category = data.get('category', 'General')
+                    description = data['description'][:80] + '...' if len(data['description']) > 80 else data['description']
+                    
+                    table_data.append([
+                        name,
+                        platform.upper(),
+                        category,
+                        description
+                    ])
+                
+                print(table(["Automation", "Platform", "Category", "Description"], table_data))
                 self.analytics.end_tracking()
                 return ""
         
         # Check for multi-step workflow
         multi_step = self.detect_multi_step(user_input)
+        
+        # Enhanced: Check for explicit chaining with commas or "then"
+        # But exclude commas within email lists or parameters
+        has_then = ' then ' in user_input.lower()
+        has_comma_chain = ',' in user_input and not '@' in user_input  # Avoid email lists
+        
+        if has_then or has_comma_chain:
+            multi_step['is_multi_step'] = True
+            if not multi_step.get('automations'):
+                # Parse comma-separated or "then" separated commands
+                parts = re.split(r',|\s+then\s+', user_input, flags=re.IGNORECASE)
+                automations = []
+                for part in parts:
+                    match = self.find_automation(part.strip())
+                    if match:
+                        automations.append(match['automation'])
+                multi_step['automations'] = automations
+                multi_step['steps'] = [f"Step {i+1}: {a}" for i, a in enumerate(automations)]
         
         if multi_step.get("is_multi_step") and len(multi_step.get("automations", [])) > 1:
             # Execute workflow chain
@@ -512,8 +572,10 @@ Format: "• automation_name - reason why it's relevant"
         
         automation = match_data["automation"]
         confidence = match_data["confidence"]
+        platform = self.automations[automation].get("platform", "n8n")
         
         print(f"\n{info(f'Running: {bold(automation)}')} {dim(f'(confidence: {confidence}%)')}")
+        print(f"{dim(f'Platform: {platform}')}")
         if params and any(params.values()):
             print(f"{info('Extracted parameters:')}")
             for key, value in params.items():
@@ -546,6 +608,18 @@ Format: "• automation_name - reason why it's relevant"
             return error(f"Automation failed: {error_msg}")
         
         self.analytics.track_execution("single", automation_name=automation, status="success", params=params)
+        
+        # Save to database
+        import time
+        exec_time = time.time() - self.analytics.start_time.timestamp() if hasattr(self.analytics, 'start_time') and self.analytics.start_time else 0
+        self.db.save_execution(
+            automation_name=automation,
+            user_input=user_input,
+            parameters=params,
+            status="success",
+            result=result,
+            execution_time=exec_time
+        )
         
         # Store in history
         self.history.append({

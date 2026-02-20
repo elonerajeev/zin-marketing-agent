@@ -1,0 +1,47 @@
+{
+  "lead_generation": {
+    "description": "Generate potential customer leads using Apollo.io and Apify sources with enrichment and validation",
+    "platform": "n8n",
+    "webhook_path": "/webhook/lead-generation",
+    "expected_response": {
+      "status": "string",
+      "message": "string",
+      "stats": "object",
+      "required_fields": ["status", "stats"]
+    }
+  },
+  "bulk_email": {
+    "description": "Send bulk emails to multiple recipients with personalized content",
+    "platform": "n8n",
+    "webhook_path": "/webhook/simple-bulk-email",
+    "expected_response": {
+      "Email Sent ": "string",
+      "required_fields": ["Email Sent "]
+    }
+  },
+  "send_sms": {
+    "description": "Send SMS notifications to customers",
+    "platform": "make",
+    "webhook_url": "https://hook.make.com/your-webhook-id-here",
+    "expected_response": {
+      "status": "string",
+      "message_id": "string"
+    }
+  },
+  "slack_notification": {
+    "description": "Send notification to Slack channel",
+    "platform": "zapier",
+    "webhook_url": "https://hooks.zapier.com/hooks/catch/your-id/",
+    "expected_response": {
+      "status": "string"
+    }
+  },
+  "google_sheets_update": {
+    "description": "Update Google Sheets with data",
+    "platform": "opal",
+    "webhook_url": "https://opal.google/webhook/your-id",
+    "expected_response": {
+      "rows_updated": "number"
+    }
+  }
+}
