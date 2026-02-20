@@ -1,0 +1,29 @@
+#!/bin/bash
+# Zin CLI Helper Script
+
+case "$1" in
+    stats)
+        python3 src/db_cli.py stats
+        ;;
+    history)
+        python3 src/db_cli.py history "${2:-10}"
+        ;;
+    leads)
+        python3 src/db_cli.py leads "${2:-20}"
+        ;;
+    *)
+        echo "Zin Marketing Agent - Database Commands"
+        echo ""
+        echo "Usage: ./zin-db [command]"
+        echo ""
+        echo "Commands:"
+        echo "  stats              Show database statistics"
+        echo "  history [N]        Show last N executions (default: 10)"
+        echo "  leads [N]          Show last N leads (default: 20)"
+        echo ""
+        echo "Examples:"
+        echo "  ./zin-db stats"
+        echo "  ./zin-db history 20"
+        echo "  ./zin-db leads 50"
+        ;;
+esac
